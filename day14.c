@@ -4,7 +4,7 @@
 
 int xy(int x, int y)
 {
-  return (x - 300) + y * 200;
+  return (x - 300) + y * 400;
 }
 
 void scanmax(char *input, int *x1, int *x2, int *y)
@@ -125,9 +125,7 @@ int main(int argc, char **argv)
 
   printf("Part 1: %d\n", part1);
   drawline(map, 301, y + 2, 699, y + 4);
-  printf("%d\n", y);
   while(add_sand(map, x1, x2, y + 3) && map[xy(500, 0)] == 0)
     part1++;
   printf("Part 2: %d\n", part1 + 1);
-  /* 23111 low */
 }
