@@ -128,4 +128,5 @@ int main(int argc, char **argv)
   while(add_sand(map, x1, x2, y + 3) && map[xy(500, 0)] == 0)
     part1++;
   printf("Part 2: %d\n", part1 + 1);
+  /* 1621222253 low */
 }
