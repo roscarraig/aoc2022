@@ -8,56 +8,96 @@ typedef struct valve_s {
   int links[10];
 } valve;
 
-int cmpfunc (const void * a, const void * b) {
-   return ( *(int*)b - *(int*)a );
-}
-
-int all_open(int *taps, int count)
+int walk(valve *valves, int count, int pos, int **map, int left, int *taps)
 {
-  int i;
+  int i, mv = 0, v, *staps;
+
+  if(left < 1)
+    return 0;
+
+  staps = malloc(count * sizeof(int));
+  memcpy(staps, taps, count * sizeof(int));
+  staps[pos] = 1;
 
   for(i = 0; i < count; i++)
-    if(taps[i] == 0)
-      return 0;
-  return 1;
+    if(i != pos && staps[i] == 0 && left - 1> map[pos][i])
+    {
+
+      v = walk(valves, count, i, map, left - 1 - map[pos][i], staps);
+
+      if(v > mv)
+        mv = v;
+    }
+  free(staps);
+
+  return valves[pos].flow * left + mv;
 }
 
-int operate(valve *valves, int count, int *taps, int flow, int left, int pos, int from)
+int walk2(valve *valves, int count, int pos1, int pos2, int **map, int left1, int left2, int *taps)
 {
-  int *results, rescount = valves[pos].linkcount, i;
+  int i, mv = 0, v, *staps;
 
-  if(left == 0)
+  if(left1 < 1 || left2 < 1)
     return 0;
-  if(all_open(taps, count))
-    return flow * left;
-  if(taps[pos] == 0)
-    rescount++;
 
-  results = malloc(sizeof(int) * rescount);
-  memset(results, 0, rescount * sizeof(int));
+  staps = malloc(count * sizeof(int));
+  memcpy(staps, taps, count * sizeof(int));
+  staps[pos1] = 1;
+  staps[pos2] = 1;
 
-  for(i = 0; i < valves[pos].linkcount; i++)
-    if(valves[pos].links[i] != from)
+  for(i = 0; i < count; i++)
+    if(left1 > left2)
     {
-      int *staps = malloc(count * sizeof(int));
-      memcpy(staps, taps, count * sizeof(int));
-      results[i] = operate(valves, count, staps, 0, left - 1, valves[pos].links[i], pos);
-      free(staps);
+      if(i != pos1 && i != pos2 && staps[i] == 0 && left1 - 1> map[pos1][i])
+      {
+        int l = left1 - 1 - map[pos1][i];
+        v = walk2(valves, count, i, pos2, map, l, left2, staps) + valves[i].flow * l;
+
+        if(v > mv)
+          mv = v;
+      }
     }
-  if(taps[pos] == 0)
+    else
+    {
+      if(i != pos1 && i != pos2 && staps[i] == 0 && left2 - 1> map[pos2][i])
+      {
+        int l = left2 - 1 - map[pos2][i];
+        v = walk2(valves, count, pos1, i, map, left1, l, staps) + valves[i].flow * l;
+
+        if(v > mv)
+          mv = v;
+      }
+    }
+  free(staps);
+
+  return mv;
+}
+
+void plot_map(int **map, int count, valve *valves)
+{
+  int res = 1, i, j, a, depth = 0;
+
+  while(res)
   {
-    taps[pos] = 1;
-    results[rescount - 1] = operate(valves, count, taps, valves[pos].flow, left - 1, pos, pos);
+    res = 0;
+    for(i = 0; i < count; i++)
+      for(j = 0; j < count; j++)
+        if(map[i][j] == depth)
+          for(a = 0; a < valves[j].linkcount; a++) 
+            if(map[i][valves[j].links[a]] == -1)
+            {
+              map[i][valves[j].links[a]] = depth + 1;
+              res++;
+            }
+    depth++;
   }
-  qsort(results, rescount, sizeof(int), cmpfunc);
-  return(flow * left + results[0]);
 }
 
 int main(int argc, char **argv)
 {
   FILE *fp = fopen(argv[1], "r");
   char  buffer[256], *labels, tmp[3];
-  int   count = 0, i = 0, *flow, **links, *linkcount, *taps;
+  int   count = 0, i = 0, *flow, **links, *linkcount, *taps, **map;
   valve *valves;
 
   while(!feof(fp) && fgets(buffer, 256, fp))
@@ -80,6 +120,14 @@ int main(int argc, char **argv)
     i++;
   }
   rewind(fp);
+  map = malloc(count * sizeof(int *));
+
+  for(i = 0; i < count; i++)
+  {
+    map[i] = malloc(sizeof(int) * count);
+    memset(map[i], -1, count * sizeof(count));
+    map[i][i] = 0;
+  }
   i = 0;
 
   while(!feof(fp) && fgets(buffer, 256, fp))
@@ -103,6 +151,9 @@ int main(int argc, char **argv)
     }
     i++;
   }
-  printf("Part 1: %d\n", operate(valves, count, taps, 0, 30, 0, 0));
-  /* 2113 high */
+  plot_map(map, count, valves);
+  i = (strstr(labels, "AA") - labels) / 3;
+  taps[i] = 1;
+  printf("Part 1: %d\n", walk(valves, count, i, map, 30, taps));
+  printf("Part 2: %d\n", walk2(valves, count, i, i, map, 26, 26, taps));
 }
