@@ -6,6 +6,7 @@ typedef struct sprite_s {
   int  width;
   int  top[4];
   int  bottom[4];
+  char dot[10];
 } sprite;
 
 typedef struct drop_s {
@@ -19,6 +20,7 @@ void load_sprites(sprite *shapes)
   shapes[0].width = 4;
   memset(shapes[0].top, 0, 4 * sizeof(int));
   memset(shapes[0].bottom, 0, 4 * sizeof(int));
+  sprintf(shapes[0].dot, "####");
 
   shapes[1].width = 3;
   shapes[1].bottom[0] = 1;
@@ -55,7 +57,7 @@ int max7(int *floor)
 int main(int argc, char **argv)
 {
   FILE  *fp = fopen(argv[1], "r");
-  char   buffer[10240];
+  char   buffer[10240], stack[7 * (2022 + 4)];
   sprite shapes[5];
   int    rocks = 0, moves = 0, floor[7], active = 0, jet = 0, jetlen;
   drop   rock;
@@ -64,6 +66,7 @@ int main(int argc, char **argv)
   jetlen = strlen(buffer) - 1;
   memset(floor, 0, 7 * sizeof(int));
   load_sprites(shapes);
+  memset(stack, 0, 7 * 2026);
 
   for(rocks = 0; rocks < 2022; rocks++)
   {
