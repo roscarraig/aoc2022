@@ -88,9 +88,12 @@ void print_sprite(sprite *shape, char *stack, int left, int alt, int *floor)
       if(shape->dot[j + i * shape->width] == '#')
       {
         stack[(alt + i) * 7 + j + left] = '#';
-	if(floor[j + left] < alt + i)
-	  floor[j + left] = alt + i;
+	// if(floor[j + left] < alt + i)
+	//   floor[j + left] = alt + i;
       }
+  for(i = 0; i < shape->width; i++)
+    if(alt + shape->top[i] > floor[i + left])
+      floor[i + left] = alt + shape->top[i];
 }
 
 void print_stack(char *stack, int start)
@@ -102,10 +105,13 @@ void print_stack(char *stack, int start)
   if(j)
   {
     print_stack(stack, start + 1);
+    printf("|");
     for(i = 0; i < 7; i++)
       printf("%c", stack[start * 7 + i]);
-    printf("\n");
+    printf("|\n");
   }
+  else
+    printf("-> %d\n", start);
 }
 
 int main(int argc, char **argv)
@@ -113,7 +119,7 @@ int main(int argc, char **argv)
   FILE  *fp = fopen(argv[1], "r");
   char   buffer[10240], stack[4 * 7 * (2022 + 4)];
   sprite shapes[5];
-  int    rocks = 0, moves = 0, floor[7], active = 0, jet = 0, jetlen;
+  int    rocks = 0, moves = 0, floor[7], active = 0, jet = 0, jetlen, i;
   drop   rock;
 
   fgets(buffer, 10240, fp);
@@ -125,11 +131,11 @@ int main(int argc, char **argv)
 
   for(rocks = 0; rocks < 2022; rocks++)
   {
-    int alt = max7(floor) + 3, left = 2, falling = 1;
+    int alt = max7(floor) + 4, left = 2, falling = 1;
     int r = rocks % 5, i;
 
     printf("%d %d\n", rocks, alt);
-    print_stack(stack, 0);
+    // print_stack(stack, 0);
 
     while(falling)
     {
@@ -163,4 +169,5 @@ int main(int argc, char **argv)
       floor[i + left] = shapes[r].top[i] + alt;
   }
   printf("Part 1: %d\n", max7(floor));
+  /* 3239 high */
 }
