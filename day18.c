@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+int box[25][25][25];
+
 typedef struct cube_s {
   int side[6];
   int axis[3];
@@ -68,39 +70,37 @@ void find_bounds(cube *cubes, int count, int *bounds)
   }
 }
 
-int wave(char ***box, int *axes, int *bounds, cube *cubes)
+int wave(int x, int y, int z, int *bounds, cube *cubes)
 {
-  int i;
+  int i, axes[] = {x, y, z};
 
   for(i = 0; i < 3; i++)
-    if(axes[i] < bounds[i] || axes[i] > bounds[i + 3])
+    if(axes[i] < 0 || axes[i] > bounds[i + 3] + 2)
       return 0;
 
-  if(ball[axes[0]][axes[1]][axes[2]] != 0)
+  if(box[axes[0]][axes[1]][axes[2]] != 0)
     return 0;
 
-  ball[axes[0]][axes[1]][axes[2]] = -1;
+  box[axes[0]][axes[1]][axes[2]] = -1;
 
   for(i = 0; i < 3; i++)
   {
-    if(axes[i] > bounds[i])
+    int n;
+    if(axes[i] > 0)
     {
-      int n = ball[i == 0 ? axes[i] - 1 : axes[i]][i == 1 ? axes[i] - 1 : axes[i]][i == 2 ? axes[i] - 1 : axes[i]];
+      n = box[i == 0 ? x - 1 : x][i == 1 ? y - 1 : y][i == 2 ? z - 1 : z];
 
       if(n > 0)
-        cubes[n - 1].sides[i + 3] = - 2;
+        cubes[n - 1].side[i + 3] = - 2;
       else if (n == 0)
-        wave(box, {i == 0 ? axes[i] - 1 : axes[i], i == 1 ? axes[i] - 1 : axes[i], i == 2 ? axes[i] - 1 : axes[i]}, bounds, cubes);
+        wave(i == 0 ? x - 1 : x, i == 1 ? y - 1 : y, i == 2 ? z - 1 : z, bounds, cubes);
     }
-    if(axes[i] < bounds[i + 3])
-    {
-      int n = ball[i == 0 ? axes[i] + 1 : axes[i]][i == 1 ? axes[i] + 1 : axes[i]][i == 2 ? axes[i] + 1 : axes[i]];
+    n = box[i == 0 ? x + 1 : x][i == 1 ? y + 1 : y][i == 2 ? z + 1 : z];
 
-      if(n > 0)
-        cubes[n - 1].sides[i + 3] = - 2;
-      else if (n == 0)
-        wave(box, {i == 0 ? axes[i] + 1 : axes[i], i == 1 ? axes[i] + 1 : axes[i], i == 2 ? axes[i] + 1 : axes[i]}, bounds, cubes);
-    }
+    if(n > 0)
+      cubes[n - 1].side[i] = - 2;
+    else if (n == 0)
+      wave(i == 0 ? x + 1 : x, i == 1 ? y + 1 : y, i == 2 ? z + 1 : z, bounds, cubes);
   }
   return 0;
 }
@@ -108,7 +108,7 @@ int wave(char ***box, int *axes, int *bounds, cube *cubes)
 int main(int argc, char **argv)
 {
   FILE  *fp = fopen(argv[1], "r");
-  int    count = 0, ind = 0, part1 = 0, part2 = 0, x, y, z, i, j, bounds[6], box[25][25][25];
+  int    count = 0, ind = 0, part1 = 0, part2 = 0, x, y, z, i, j, bounds[6];
   char   buffer[256];
   cube  *cubes;
 
@@ -133,10 +133,7 @@ int main(int argc, char **argv)
         part1++;
   printf("Part 1: %d\n", part1);
   find_bounds(cubes, count, bounds);
-  for(i = 0; i < 6; i++)
-    printf("%d ", bounds[i]);
-  printf("\n");
-  printf("%d\n", sizeof(box));
+  
   for(i = 0; i < count; i++)
     for(j = 0; j < 3; j++)
     {
@@ -145,10 +142,13 @@ int main(int argc, char **argv)
       if(cubes[i].axis[j] == bounds[j + 3] && cubes[i].side[j + 3] == -1)
         cubes[i].side[j + 3] = -2;
     }
-  wave(box, {0, 0, 0}, bounds, cubes);
+  wave(0, 0, 0, bounds, cubes);
+  // wave(bounds[0] + 1, bounds[1] + 1, bounds[2] + 1, bounds, cubes);
   for(ind = 0; ind < count; ind++)
+  {
     for(i = 0; i < 6; i++)
       if(cubes[ind].side[i] == -2)
         part2++;
+  }
   printf("Part 2: %d\n", part2);
 }
