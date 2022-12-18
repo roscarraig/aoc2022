@@ -79,7 +79,7 @@ int overlaps(sprite *shape, char *stack, int left, int alt)
   return res;
 }
 
-void print_sprite(sprite *shape, char *stack, int left, int alt, int *floor)
+void print_sprite(sprite *shape, char *stack, int left, int alt, int *floor, char x)
 {
   int i, j;
 
@@ -87,20 +87,17 @@ void print_sprite(sprite *shape, char *stack, int left, int alt, int *floor)
     for(j = 0; j < shape->width; j++)
       if(shape->dot[j + i * shape->width] == '#')
       {
-        stack[(alt + i) * 7 + j + left] = '#';
-	// if(floor[j + left] < alt + i)
-	//   floor[j + left] = alt + i;
+        stack[(alt + i) * 7 + j + left] = x;
+	if(floor[j + left] < alt + i)
+	   floor[j + left] = alt + i;
       }
-  for(i = 0; i < shape->width; i++)
-    if(alt + shape->top[i] > floor[i + left])
-      floor[i + left] = alt + shape->top[i];
 }
 
 void print_stack(char *stack, int start)
 {
   int i, j = 0;
   for(i = 0; i < 7; i++)
-    if(stack[start * 7 + i] == '#')
+    if(stack[start * 7 + i] > ' ')
       j = 1;
   if(j)
   {
@@ -117,26 +114,33 @@ void print_stack(char *stack, int start)
 int main(int argc, char **argv)
 {
   FILE  *fp = fopen(argv[1], "r");
-  char   buffer[10240], stack[4 * 7 * (2022 + 4)];
+  char   buffer[10240], stack[4 * 7 * 70000];
   sprite shapes[5];
   int    rocks = 0, moves = 0, floor[7], active = 0, jet = 0, jetlen, i;
   drop   rock;
+  long   target2 = 1000000000000, loopstart, loopmod, loopcount, part2a, part2b;
 
   fgets(buffer, 10240, fp);
   jetlen = strlen(buffer) - 1;
+  loopmod = jetlen * 5;
+  loopstart = target2 % loopmod + loopmod;
+  loopcount = target2 / loopmod;
+  // printf("%d %ld %ld\n", jetlen * 5, loopcount, loopstart);
+  // printf("%ld %ld\n", loopmod, target2 - (loopcount * loopmod));
   memset(floor, 0, 7 * sizeof(int));
   load_sprites(shapes);
-  memset(stack, 32, 4 * 7 * 2026);
+  memset(stack, 32, 4 * 7 * 70000);
   memset(stack, '#', 7);
 
-  for(rocks = 0; rocks < 2022; rocks++)
+  for(rocks = 0; rocks < loopstart + loopmod; rocks++)
   {
     int alt = max7(floor) + 4, left = 2, falling = 1;
     int r = rocks % 5, i;
 
-    printf("%d %d\n", rocks, alt);
-    // print_stack(stack, 0);
-
+    if(rocks == 2022)
+      printf("Part 1: %d\n", max7(floor));
+    else if(rocks == loopstart)
+      part2a = max7(floor);
     while(falling)
     {
       char c = buffer[jet++];
@@ -154,20 +158,16 @@ int main(int argc, char **argv)
       if(overlaps(&(shapes[r]), stack, left, alt - 1))
       {
         falling = 0;
-	print_sprite(&(shapes[r]), stack, left, alt, floor);
+	print_sprite(&(shapes[r]), stack, left, alt, floor, '#');
       }
-
-      /*
-      for(i = 0; i < shapes[r].width; i++)
-        if(floor[i + left] + 1 == shapes[r].bottom[i] + alt)
-          falling = 0;
-      */
       if(falling)
         alt--;
     }
     for(i = 0; i < shapes[r].width; i++)
-      floor[i + left] = shapes[r].top[i] + alt;
+      if(alt + shapes[r].top[i] > floor[i + left])
+        floor[i + left] = shapes[r].top[i] + alt;
   }
-  printf("Part 1: %d\n", max7(floor));
-  /* 3239 high */
+  // part2b = max7(floor);
+  // printf("Part 2: %ld\n", (part2b - part2a) * loopcount);
+  /* 1575879496604 high */
 }
