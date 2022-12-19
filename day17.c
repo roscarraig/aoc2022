@@ -114,33 +114,33 @@ void print_stack(char *stack, int start)
 int main(int argc, char **argv)
 {
   FILE  *fp = fopen(argv[1], "r");
-  char   buffer[10240], stack[4 * 7 * 70000];
+  char   buffer[10240], stack[4 * 7 * 2022 * 100];
   sprite shapes[5];
-  int    rocks = 0, moves = 0, floor[7], active = 0, jet = 0, jetlen, i;
+  int    moves = 0, floor[7], active = 0, jet = 0, jetlen, i;
   drop   rock;
-  long   target2 = 1000000000000, loopstart, loopmod, loopcount, part2a, part2b;
+  long   rocks, target2 = 1000000000000, looplen, loopmod, loopcount, part2;
 
   fgets(buffer, 10240, fp);
   jetlen = strlen(buffer) - 1;
-  loopmod = jetlen * 5;
-  loopstart = target2 % loopmod + loopmod;
-  loopcount = target2 / loopmod;
-  // printf("%d %ld %ld\n", jetlen * 5, loopcount, loopstart);
-  // printf("%ld %ld\n", loopmod, target2 - (loopcount * loopmod));
+  looplen = jetlen * 5 * 7;
+  loopmod = target2 % looplen;
+  loopcount = target2 / looplen;
+
   memset(floor, 0, 7 * sizeof(int));
   load_sprites(shapes);
-  memset(stack, 32, 4 * 7 * 70000);
+  memset(stack, 32, 4 * 7 * 2022 * 100);
   memset(stack, '#', 7);
 
-  for(rocks = 0; rocks < loopstart + loopmod; rocks++)
+  for(rocks = 0; rocks < loopmod + looplen; rocks++)
   {
     int alt = max7(floor) + 4, left = 2, falling = 1;
     int r = rocks % 5, i;
 
     if(rocks == 2022)
       printf("Part 1: %d\n", max7(floor));
-    else if(rocks == loopstart)
-      part2a = max7(floor);
+    else if(rocks == loopmod)
+      part2 = max7(floor);
+
     while(falling)
     {
       char c = buffer[jet++];
@@ -167,7 +167,5 @@ int main(int argc, char **argv)
       if(alt + shapes[r].top[i] > floor[i + left])
         floor[i + left] = shapes[r].top[i] + alt;
   }
-  // part2b = max7(floor);
-  // printf("Part 2: %ld\n", (part2b - part2a) * loopcount);
-  /* 1575879496604 high */
+  printf("Part 2: %ld\n", part2 + (max7(floor) - part2) * loopcount);
 }
