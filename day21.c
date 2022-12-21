@@ -38,71 +38,57 @@ long mval(monkey *monkeys, char *list, int ind)
 
 int has(monkey *monkeys, char *list, int ind, int seek)
 {
-  int ai, bi;
-
   if(ind == seek)
     return 1;
   if(monkeys[ind].hit)
     return 0;
 
-  ai = mindex(list, monkeys[ind].a);
-  bi = mindex(list, monkeys[ind].b);
-
-  return has(monkeys, list, ai, seek) + has(monkeys, list, bi, seek);
+  return has(monkeys, list, monkeys[ind].ai, seek) + has(monkeys, list, monkeys[ind].bi, seek);
 }
 
 long resolve(monkey *monkeys, char *list, int ind, int hind, long want)
 {
   long need;
-  int  lr, ai, bi, ha, hb;
+  int  ai, bi, ha, hb;
 
   if(ind == hind)
     return want;
 
 
-  ai = mindex(list, monkeys[ind].a);
-  bi = mindex(list, monkeys[ind].b);
+  ai = monkeys[ind].ai;
+  bi = monkeys[ind].bi;
   ha = has(monkeys, list, ai, hind);
   hb = has(monkeys, list, bi, hind);
 
   if(ha == hb)
     printf("This should not happen\n");
 
-  if(ha)
-  {
-    lr = 0;
-    need = mval(monkeys, list, bi);
-  }
-  else
-  {
-    lr = 1;
-    need = mval(monkeys, list, ai);
-  }
+  need = ha ? mval(monkeys, list, bi) : mval(monkeys, list, ai);
 
   switch(monkeys[ind].op)
   {
     case '=':
-      if(lr == 0)
+      if(ha)
         return resolve(monkeys, list, ai, hind, need);
       else
         return resolve(monkeys, list, bi, hind, need);
     case '+':
-      if(lr == 0)
+      if(ha)
         return resolve(monkeys, list, ai, hind, want - need);
       else
         return resolve(monkeys, list, bi, hind, want - need);
     case '-':
-      if(lr == 0)
+      if(ha)
         return resolve(monkeys, list, ai, hind, want + need);
       else
         return resolve(monkeys, list, bi, hind, need - want);
     case '*':
-      if(lr == 0)
+      if(ha)
         return resolve(monkeys, list, ai, hind, want / need);
       else
         return resolve(monkeys, list, bi, hind, want / need);
     case '/':
-      if(lr == 0)
+      if(ha)
         return resolve(monkeys, list, ai, hind, want * need);
       else
         return resolve(monkeys, list, bi, hind, need / want);
